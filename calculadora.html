@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4062fa 0%, #131258 100%);
+            font-family: Arial, sans-serif;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            width: 320px;
+        }
+
+        .display {
+            background: #333;
+            color: #fff;
+            font-size: 2em;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: right;
+            margin-bottom: 20px;
+            word-wrap: break-word;
+            min-height: 60px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .number {
+            background: #f0f0f0;
+        }
+
+        .operator {
+            background: #0c248d;
+            color: white;
+        }
+
+        .equals {
+            background: #1c8b4a;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .clear {
+            background: #f56565;
+            color: white;
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="operator" onclick="appendOperator('/')">/</button>
+            <button class="operator" onclick="appendOperator('*')">*</button>
+
+            <button class="number" onclick="appendNumber('7')">7</button>
+            <button class="number" onclick="appendNumber('8')">8</button>
+            <button class="number" onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('-')">-</button>
+
+            <button class="number" onclick="appendNumber('4')">4</button>
+            <button class="number" onclick="appendNumber('5')">5</button>
+            <button class="number" onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+
+            <button class="number" onclick="appendNumber('1')">1</button>
+            <button class="number" onclick="appendNumber('2')">2</button>
+            <button class="number" onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="toggleSign()">+/-</button>
+
+            <button class="number" onclick="appendNumber('0')">0</button>
+            <button class="number" onclick="appendNumber('.')">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let currentValue = '0';
+        let previousValue = '';
+        let operator = '';
+        let shouldResetDisplay = false;
+
+        function appendNumber(num) {
+            if (shouldResetDisplay) {
+                currentValue = num;
+                shouldResetDisplay = false;
+            } else {
+                currentValue = currentValue === '0' ? num : currentValue + num;
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (operator && !shouldResetDisplay) {
+                calculate();
+            }
+            previousValue = currentValue;
+            operator = op;
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        function calculate() {
+            if (!operator || shouldResetDisplay) return;
+
+            let result;
+            const prev = parseFloat(previousValue);
+            const current = parseFloat(currentValue);
+
+            switch (operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+
+            currentValue = result.toString();
+            operator = '';
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentValue = '0';
+            previousValue = '';
+            operator = '';
+            shouldResetDisplay = false;
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            currentValue = (parseFloat(currentValue) * -1).toString();
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            display.textContent = currentValue;
+        }
+
+        // Soporte para teclado
+        document.addEventListener('keydown', (event) => {
+            const key = event.key;
+
+            // Números 0-9
+            if (key >= '0' && key <= '9') {
+                appendNumber(key);
+                event.preventDefault();
+            }
+            // Operadores
+            else if (key === '+') {
+                appendOperator('+');
+                event.preventDefault();
+            }
+            else if (key === '-') {
+                appendOperator('-');
+                event.preventDefault();
+            }
+            else if (key === '*') {
+                appendOperator('*');
+                event.preventDefault();
+            }
+            else if (key === '/') {
+                appendOperator('/');
+                event.preventDefault();
+            }
+            // Punto decimal
+            else if (key === '.') {
+                appendNumber('.');
+                event.preventDefault();
+            }
+            // Calcular (Enter o =)
+            else if (key === 'Enter' || key === '=') {
+                calculate();
+                event.preventDefault();
+            }
+            // Limpiar (C o Escape)
+            else if (key === 'c' || key === 'C' || key === 'Escape') {
+                clearDisplay();
+                event.preventDefault();
+            }
+            // Eliminar último dígito (Backspace)
+            else if (key === 'Backspace') {
+                if (currentValue.length > 1) {
+                    currentValue = currentValue.slice(0, -1);
+                } else {
+                    currentValue = '0';
+                }
+                shouldResetDisplay = false;
+                updateDisplay();
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
